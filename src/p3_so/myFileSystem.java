@@ -5,17 +5,27 @@
  */
 package p3_so;
 
+import console.GUI;
+
 /**
  *
  * @author Jean
  */
-public class P3_SO {
-
-    /**
+public class myFileSystem {
+    
+     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        int argsCont = args.length;
+        GUI console = new GUI();
+        if(argsCont==0){
+            console.loadNewFile();
+        }else if(argsCont==1){
+            console.loadWithFile();
+        }else{
+            console.initError();
+        }        
     }
     
 }
