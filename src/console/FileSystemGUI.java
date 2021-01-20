@@ -10,12 +10,12 @@ import org.json.simple.JSONObject;
  *
  * @author Jean
  */
-public class FileSystem {
+public class FileSystemGUI {
     
     private String currentPah = "miFS";
     private String currentUser = "root";
     
-    public FileSystem(){
+    public FileSystemGUI(){
         
     }
     
@@ -67,7 +67,7 @@ public class FileSystem {
                 
                 self.print("name: ");
                 String name = self.getArgumentFromConsole();
-                if(name== ""){
+                if(!name.isEmpty()){
                     res.put("status", false);
                     res.put("msg", "invalid name");
                     return res;
@@ -76,7 +76,7 @@ public class FileSystem {
                 self.print("password: ");
                 String pass = self.getArgumentFromConsole();
                 String[] passArguments  = pass.split("\\s+");
-                if(passArguments.length!=1 &&  passArguments[0]==""){
+                if(passArguments.length!=1 &&  passArguments[0].isEmpty()){
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;
@@ -86,7 +86,7 @@ public class FileSystem {
                 self.print("confirm password: ");
                 String pass2 = self.getArgumentFromConsole();
                 String[] passArguments2  = pass2.split("\\s+");
-                if(passArguments2.length!=1 &&  passArguments2[0]==""){
+                if(passArguments2.length!=1 &&  passArguments2[0].isEmpty()){
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;
@@ -148,7 +148,7 @@ public class FileSystem {
                 self.print("password: ");
                 String pass = self.getArgumentFromConsole();
                 String[] passArguments  = pass.split("\\s+");
-                if(passArguments.length!=1 &&  passArguments[0]==""){
+                if(passArguments.length!=1 &&  passArguments[0].isEmpty()){
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;
@@ -158,7 +158,7 @@ public class FileSystem {
                 self.print("confirm password: ");
                 String pass2 = self.getArgumentFromConsole();
                 String[] passArguments2  = pass2.split("\\s+");
-                if(passArguments2.length!=1 &&  passArguments2[0]==""){
+                if(passArguments2.length!=1 &&  passArguments2[0].isEmpty()){
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;
@@ -198,7 +198,7 @@ public class FileSystem {
                 self.print("password: ");
                 String pass = self.getArgumentFromConsole();
                 String[] passArguments  = pass.split("\\s+");
-                if(passArguments.length!=1 &&  passArguments[0]==""){
+                if(passArguments.length!=1 &&  passArguments[0].isEmpty()){
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;   

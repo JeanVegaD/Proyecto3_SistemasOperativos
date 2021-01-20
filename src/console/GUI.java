@@ -10,7 +10,7 @@ package console;
  * @author Jean
  */
 
-import console.FileSystem;
+import console.FileSystemGUI;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -31,10 +31,10 @@ public class GUI {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
     
-    private FileSystem FS;
+    private FileSystemGUI FS;
     
     public GUI(){
-        FS = new FileSystem();
+        FS = new FileSystemGUI();
         introText();   
     }
     
