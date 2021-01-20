@@ -4,6 +4,11 @@
  * and open the template in the editor.
  */
 package console;
+
+import filesystem.FileSystem;
+import filesystem.directories.Component;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import org.json.simple.JSONObject;
 
 /**
@@ -11,685 +16,681 @@ import org.json.simple.JSONObject;
  * @author Jean
  */
 public class FileSystemGUI {
-    
-    private String currentPah = "miFS";
+
+    private String fsName = "miFS";
     private String currentUser = "root";
+    private FileSystem fs;
+
+    public FileSystemGUI() {
+        this.fs = new FileSystem();
+        this.fs.format(10240, "root123");
+        this.initTestValues(); // TEST
+    }
     
-    public FileSystemGUI(){
+    public void initTestValues() {
+        this.fs.usseradd("Luis M", "luis", "luis1");
+        this.fs.usseradd("Michelle A", "mich", "mich1");
+        this.fs.usseradd("Jean V", "jean", "jean1");
         
-    }
-    
-    public String getCurrentPah() {
-        return currentPah;
+        this.fs.groupadd("admin");
+        this.fs.groupadd("test");
     }
 
-    public String getCurrentUser() {
-        return currentUser;
+    public String getFsName() {
+        return fsName;
     }
-    
-    
-    
+
+    public String getCurrentUsername() {
+        return this.fs.getCurrentUsername();
+    }
+
     /*Commmands*/
-    public JSONObject exctuteFormat(String[] parameters){
+    public JSONObject executeFormat(String[] parameters) {
         JSONObject res = new JSONObject();
-       if(parameters.length==0){
-
-           res.put("status", true);
-           res.put("msg", "ok");
-           return res;
-       }else {
-          res.put("status", false);
+        if (parameters.length == 0) {
+            res.put("status", true);
+            res.put("msg", "ok");
+            return res;
+        } else {
+            res.put("status", false);
             res.put("msg", "format expected 0 arguments but got " + parameters.length);
             return res;
-       }
+        }
     }
-    
-    
-    
-    public JSONObject exctuteExit(String[] parameters){
-       JSONObject res = new JSONObject();
-       if(parameters.length==0){
 
-           res.put("status", true);
-           res.put("msg", "ok");
-           return res;
-       }else {
-          res.put("status", false);
+    public JSONObject executeExit(String[] parameters) {
+        JSONObject res = new JSONObject();
+        if (parameters.length == 0) {
+            res.put("status", true);
+            res.put("msg", "ok");
+            return res;
+        } else {
+            res.put("status", false);
             res.put("msg", "exit expected 0 arguments but got " + parameters.length);
             return res;
-       }
+        }
     }
-    
-    public JSONObject exctuteUserAdd(String[] parameters,GUI self){
+
+    public JSONObject executeUserAdd(String[] parameters, GUI self) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(true){ //validar que el usuario no exista
-                
-                self.print("name: ");
+        if (parameters.length == 1) {
+            if (!this.fs.getUserManager().userExists(parameters[0])) { //valida que el usuario no exista
+                self.print("full name: ");
                 String name = self.getArgumentFromConsole();
-                if(!name.isEmpty()){
+                if (name.isEmpty()) {
                     res.put("status", false);
                     res.put("msg", "invalid name");
                     return res;
                 }
-                
+
                 self.print("password: ");
                 String pass = self.getArgumentFromConsole();
-                String[] passArguments  = pass.split("\\s+");
-                if(passArguments.length!=1 &&  passArguments[0].isEmpty()){
+                String[] passArguments = pass.split("\\s+");
+                if (passArguments.length != 1 && !passArguments[0].equals("")) {
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;
-                    
                 }
-                
+
                 self.print("confirm password: ");
                 String pass2 = self.getArgumentFromConsole();
-                String[] passArguments2  = pass2.split("\\s+");
-                if(passArguments2.length!=1 &&  passArguments2[0].isEmpty()){
+                String[] passArguments2 = pass2.split("\\s+");
+                if (passArguments2.length != 1 && !passArguments[0].equals("")) {
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;
-                    
                 }
-                
-                if(passArguments[0].equals(passArguments2[0])){
+
+                if (passArguments[0].equals(passArguments2[0])) {
+                    this.fs.usseradd(name, parameters[0], passArguments[0]);
                     res.put("status", true);
                     res.put("msg", "ok");
                     return res;
-                }else{
+                } else {
                     res.put("status", false);
                     res.put("msg", "passwords do not match");
                     return res;
                 }
-            }else{
+            } else {
                 res.put("status", false);
-                res.put("msg", "This user already exists");
+                res.put("msg", "this user already exists");
                 return res;
             }
-        }else{
+        } else {
             res.put("status", false);
             res.put("msg", "usseradd expected 1 arguments but got " + parameters.length);
             return res;
-        }  
+        }
     }
-    
-    public JSONObject exctuteGroupAdd(String[] parameters){
+
+    public JSONObject executeGroupAdd(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-             if(true){ //validar que el usuario tenga permisos para crear grupos
-                 if(true){
+        if (parameters.length == 1) {
+            if (this.fs.hasPermissionOfGroupsCreation(parameters[0])) { // valida que el usuario tenga permisos para crear grupos
+                if (this.fs.getUserManager().groupExists(parameters[0])) { // valida que el grupo existe
+                    res.put("status", false);
+                    res.put("msg", "this group already exists");
+                    return res;
+                } else {
+                    this.fs.groupadd(parameters[0]);
                     res.put("status", true);
                     res.put("msg", "ok");
-                    return res;  
-                 }else{
-                     res.put("status", false);
-                    res.put("msg", "This user already exists");
                     return res;
-                 }
-             }else{
-                    res.put("status", false);
-                    res.put("msg", "this user cannot create groups");
-                    return res;
-             }
-        }else{
+                }
+            } else {
+                res.put("status", false);
+                res.put("msg", "this user cannot create groups");
+                return res;
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "groupadd expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctutePasswd(String[] parameters,GUI self){
-        JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(true){ //validar que el ususarioe exista
-                
 
+    public JSONObject executePasswd(String[] parameters, GUI self) {
+        JSONObject res = new JSONObject();
+        switch (parameters.length) {
+            case 1: // El usuario actual es el root y puede cambiar la contraseña de otro usuario
+                if (!(this.fs.getCurrentUserIsRoot() && this.fs.getUserManager().userExists(parameters[0]))) {
+                    res.put("status", false);
+                    res.put("msg", "this user doesn't have permissions to change other users password");
+                    return res;
+                }
+            case 0: // El usuario actual no es el root o lo es, pero va a cambiar su contraseña
                 self.print("password: ");
                 String pass = self.getArgumentFromConsole();
-                String[] passArguments  = pass.split("\\s+");
-                if(passArguments.length!=1 &&  passArguments[0].isEmpty()){
+                String[] passArguments = pass.split("\\s+");
+                if (passArguments.length != 1 && !passArguments[0].equals("")) {
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;
-                    
                 }
-                
                 self.print("confirm password: ");
                 String pass2 = self.getArgumentFromConsole();
-                String[] passArguments2  = pass2.split("\\s+");
-                if(passArguments2.length!=1 &&  passArguments2[0].isEmpty()){
+                String[] passArguments2 = pass2.split("\\s+");
+                if (passArguments2.length != 1 && !passArguments2[0].equals("")) {
                     res.put("status", false);
                     res.put("msg", "invalid password");
                     return res;
                 }
-                
-                if(passArguments[0].equals(passArguments2[0])){
+                if (passArguments[0].equals(passArguments2[0])) {
+                    this.fs.passwd(parameters.length == 0 ? this.fs.getCurrentUsername() : parameters[0], passArguments[0]);
                     res.put("status", true);
                     res.put("msg", "ok");
                     return res;
-                }else{
+                } else {
                     res.put("status", false);
                     res.put("msg", "passwords do not match");
                     return res;
                 }
-            }else{
+            default:
                 res.put("status", false);
-                res.put("msg", "this user does not exist");
+                res.put("msg", "passwd expected 0 or 1 arguments but got " + parameters.length);
                 return res;
-            }
-        }else{
-            res.put("status", false);
-            res.put("msg", "passwd expected 1 arguments but got " + parameters.length);
-            return res;
-        }  
+        }
     }
-    
-    public JSONObject exctuteSu(String[] parameters,GUI self){
-       JSONObject res = new JSONObject();
-       
-       if(parameters.length==0){
-           //cambio de usuario a root
-           res.put("status", true);
-           res.put("msg", "ok");
-           return res;
-       }else if(parameters.length==1){
-            if(true){ //validar que el ususarioe exista
-                self.print("password: ");
-                String pass = self.getArgumentFromConsole();
-                String[] passArguments  = pass.split("\\s+");
-                if(passArguments.length!=1 &&  passArguments[0].isEmpty()){
+
+    public JSONObject executeSu(String[] parameters, GUI self) {
+        JSONObject res = new JSONObject();
+        boolean isRoot = false;
+        if (parameters.length == 0 || parameters.length == 1) {
+            if (parameters.length == 0) {
+                isRoot = true;
+            } else {
+                if (!this.fs.getUserManager().userExists(parameters[0])) { // validar que el ususarioe exista
                     res.put("status", false);
-                    res.put("msg", "invalid password");
-                    return res;   
-                }
-                
-                //validar password del usuario
-                if(true ){
-                    //cambio al usuario indicado
-                    res.put("status", true);
-                    res.put("msg", "ok");
-                    return res;
-                }else{
-                    res.put("status", false);
-                    res.put("msg", "passwords do not match");
+                    res.put("msg", "this user does not exist");
                     return res;
                 }
-            }else{
+            }
+            self.print("password: ");
+            String pass = self.getArgumentFromConsole();
+            String[] passArguments = pass.split("\\s+");
+            if (passArguments.length != 1 && passArguments[0].isEmpty()) {
                 res.put("status", false);
-                res.put("msg", "this user does not exist");
+                res.put("msg", "invalid password");
                 return res;
             }
-        }else{
+            // validar password del usuario
+            boolean validUser;
+            if (isRoot) {
+                validUser = this.fs.su(passArguments[0]);
+            } else {
+                validUser = this.fs.su(parameters[0], passArguments[0]);
+            }
+            if (validUser) {
+                res.put("status", true);
+                res.put("msg", "ok");
+                return res;
+            } else {
+                res.put("status", false);
+                res.put("msg", "passwords do not match");
+                return res;
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "su expected 0 or 1 arguments but got " + parameters.length);
             return res;
-        }   
+        }
     }
-    
-    public JSONObject exctuteWhoami(String[] parameters){
-       JSONObject res = new JSONObject();
-       if(parameters.length==0){
-           //obtener el nombre y el usuario 
-           String name= "name: "  + "\n";
-           String username= "username: " ;
-           
-           res.put("status", true);
-           res.put("msg", name+ username);
-           return res;
-       }else {
-          res.put("status", false);
+
+    public JSONObject executeWhoami(String[] parameters) {
+        JSONObject res = new JSONObject();
+        if (parameters.length == 0) {
+            String info = this.fs.whoami();
+            res.put("status", true);
+            res.put("msg", info);
+            return res;
+        } else {
+            res.put("status", false);
             res.put("msg", "whoami expected 0 arguments but got " + parameters.length);
             return res;
-       }
+        }
     }
-    
-    public JSONObject exctutePwd(String[] parameters){
+
+    public JSONObject executePwd(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==0){
-           //obtener la ruta actual
-           String path= "/root/";
-           
-           res.put("status", true);
-           res.put("msg",path);
-           return res;
-        }else {
-          res.put("status", false);
+        if (parameters.length == 0) {
+            // obtener la ruta actual
+            String path = this.fs.getCurrentPath();
+            if (path.isEmpty()) {
+                path = "*root*";
+            }
+            res.put("status", true);
+            res.put("msg", path);
+            return res;
+        } else {
+            res.put("status", false);
             res.put("msg", "pwd expected 0 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteMkdir(String[] parameters){
+
+    public JSONObject executeMkdir(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-           //se valida el directorio
-           if(true){
-                res.put("status", true);
-                res.put("msg","ok");
-                return res;
-           }else{
-               res.put("status", false);
-                res.put("msg", "invalid dirname");
-                return res;
-           } 
-        }else {
+        if (parameters.length == 0) {
             res.put("status", false);
             res.put("msg", "mkdir expected 1 arguments but got " + parameters.length);
             return res;
+        } else {
+            String result = this.fs.mkdir(parameters);
+            res.put("status", true);
+            res.put("msg", result.equals("") ? "ok" : result);
+            return res;
         }
     }
-    
-    public JSONObject exctuteRm(String[] parameters){
+
+    public JSONObject executeRm(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-           //se valida que exista y se pueda borrar
-           if(true){
+        if (parameters.length == 1) {
+            //se valida que exista y se pueda borrar
+            if (true) {
                 res.put("status", true);
-                res.put("msg","ok");
+                res.put("msg", "ok");
                 return res;
-           }else{
-               res.put("status", false);
+            } else {
+                res.put("status", false);
                 res.put("msg", "invalid dirname or file ");
                 return res;
-           }
-        }else if(parameters.length==2){
-            if(parameters[0].equals("-R")){
+            }
+        } else if (parameters.length == 2) {
+            if (parameters[0].equals("-R")) {
                 //se valida que exista y se pueda borrar
-                if(true){
-                     res.put("status", true);
-                     res.put("msg","ok");
-                     return res;
-                }else{
+                if (true) {
+                    res.put("status", true);
+                    res.put("msg", "ok");
+                    return res;
+                } else {
                     res.put("status", false);
-                     res.put("msg", "invalid dirname or file ");
-                     return res;
+                    res.put("msg", "invalid dirname or file ");
+                    return res;
                 }
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "rm expected a flag in the first argument");
                 return res;
-            }     
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "rm expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteMv(String[] parameters){
+
+    public JSONObject executeMv(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==2){
-           //se valida el primer directorio
-           if(true){
-               if(true){ //se valida si el segundo directorio existe
+        if (parameters.length == 2) {
+            //se valida el primer directorio
+            if (true) {
+                if (true) { //se valida si el segundo directorio existe
                     res.put("status", true);
-                    res.put("msg","ok");
+                    res.put("msg", "ok");
                     return res;
-               }else{// se cambia de nombre
+                } else {// se cambia de nombre
                     res.put("status", true);
-                    res.put("msg","ok");
+                    res.put("msg", "ok");
                     return res;
-               }
-           }else{
+                }
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid dirname");
                 return res;
-           } 
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "mv expected 2 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteLs(String[] parameters){
+
+    public JSONObject executeLs(String[] parameters, GUI self) {
         JSONObject res = new JSONObject();
-        if(parameters.length==0){
-           //se lista el directorio
-           
+        if (parameters.length == 0) {
+            //se lista el directorio
+            for (Component comp: this.fs.getDirManager().getCurrentDir().getContents()) {
+                self.print(comp.getComponentInfo() + " ");
+                if (comp.getKind() == Component.DIR) {
+                    self.printBlue(comp.getName());
+                } else {
+                    self.print(comp.getName());
+                }
+                self.print("\n");
+            } 
             res.put("status", true);
-            res.put("msg","ok");
+            res.put("msg", "ok");
             return res;
-           
-        }else if(parameters.length==1){
-            if(parameters[0].equals("-R")){
-                //se lista el directorio y sus carpetas
+
+        } else if (parameters.length == 1) {
+            if (parameters[0].equals("-R")) {
+                // TODO: se lista el directorio y sus carpetas
                 res.put("status", true);
-                res.put("msg","ok");
+                res.put("msg", "ok");
                 return res;
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "ls expected a flag in the first argument");
                 return res;
-            }   
-        }
-        else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "ls expected 0 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public void exctuteClear(String[] parameters){
-        
+
+    public void executeClear(String[] parameters) {
+
     }
-    
-    public JSONObject exctuteCd(String[] parameters){
+
+    public JSONObject executeCd(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(parameters[0].equals("..")){
-                res.put("status", true);
-                res.put("msg","ok");
-                return res;
-            }else{
-               if(true){ //se valida el directorio
-                    res.put("status", true);
-                    res.put("msg","ok");
-                    return res;
-               }else{
-                    res.put("status", false);
-                    res.put("msg", "invalid dirname");
-                    return res;
-               }
-            }           
-        }else {
+        if (parameters.length == 1) {
+            String result = this.fs.cd(parameters[0]);
+            res.put("status", true);
+            res.put("msg", result.equals("") ? "ok" : result);
+            return res;
+        } else {
             res.put("status", false);
             res.put("msg", "cd expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteWhereis(String[] parameters){
+
+    public JSONObject executeWhereis(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(true){ // se valida archivo
+        if (parameters.length == 1) {
+            if (true) { // se valida archivo
                 res.put("status", true);
-                res.put("msg","ok");
+                res.put("msg", "ok");
                 return res;
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid filename");
                 return res;
-            }           
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "whereis expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteLn(String[] parameters){
+
+    public JSONObject executeLn(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==2){
-           if(true){ //se valida el primer directorio y los 
-               if(true){// se validan los permisos sobre el archivo
-                   if(true){ //se valida si el segundo directorio existe
+        if (parameters.length == 2) {
+            if (true) { //se valida el primer directorio y los 
+                if (true) {// se validan los permisos sobre el archivo
+                    if (true) { //se valida si el segundo directorio existe
                         res.put("status", true);
-                        res.put("msg","ok");
+                        res.put("msg", "ok");
                         return res;
-                   }else{// se cambia de nombre
+                    } else {// se cambia de nombre
                         res.put("status", true);
-                        res.put("msg","ok");
+                        res.put("msg", "ok");
                         return res;
-                   }
-               }else{
-                   res.put("status", false);
+                    }
+                } else {
+                    res.put("status", false);
                     res.put("msg", "user can't do this action");
                     return res;
-               }
-           }else{
+                }
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid dirname");
                 return res;
-           } 
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "ln expected 2 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteTouch(String[] parameters){
+
+    public JSONObject executeTouch(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(true){ //se valida que no exista  el archivo
+        if (parameters.length == 1) {
+            boolean result = this.fs.touch(parameters[0]);
+            if (result) { //se valida que no exista  el archivo
                 res.put("status", true);
-                res.put("msg","ok");
+                res.put("msg", "ok");
                 return res;
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "the file already exists");
                 return res;
-            }           
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "touch expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteCat(String[] parameters){
+
+    public JSONObject executeCat(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(true){ //se valida que el archivo exista
+        if (parameters.length == 1) {
+            if (true) { //se valida que el archivo exista
                 res.put("status", true);
-                res.put("msg","ok");
+                res.put("msg", "ok");
                 return res;
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid filename");
                 return res;
-            }           
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "touch expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteChown(String[] parameters){
+
+    public JSONObject executeChown(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==2){
-           if(true){ //se valida el username
-               if(true){ //se valida el driname or filename
-                   res.put("status", true);
-                    res.put("msg","ok");
+        if (parameters.length == 2) {
+            if (true) { //se valida el username
+                if (true) { //se valida el driname or filename
+                    res.put("status", true);
+                    res.put("msg", "ok");
                     return res;
-               }else{
+                } else {
                     res.put("status", false);
-                res.put("msg", "invalid  driname or filename");
-                return res;
-               }
-           }else{
+                    res.put("msg", "invalid  driname or filename");
+                    return res;
+                }
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid  username");
                 return res;
-           }
-        }else if(parameters.length==3){
-            if(parameters[0].equals("-R")){
-                if(true){ //se valida el ussename
-                     if(true){ //se valida el driname or filename
+            }
+        } else if (parameters.length == 3) {
+            if (parameters[0].equals("-R")) {
+                if (true) { //se valida el ussename
+                    if (true) { //se valida el driname or filename
                         res.put("status", true);
-                         res.put("msg","ok");
-                         return res;
-                    }else{
-                         res.put("status", false);
-                     res.put("msg", "invalid  driname or filename");
-                     return res;
+                        res.put("msg", "ok");
+                        return res;
+                    } else {
+                        res.put("status", false);
+                        res.put("msg", "invalid  driname or filename");
+                        return res;
                     }
-                }else{
+                } else {
                     res.put("status", false);
                     res.put("msg", "invalid  username");
                     return res;
                 }
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "chown expected a flag in the first argument");
                 return res;
-            }     
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "chown expected 2 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteChgrp(String[] parameters){
+
+    public JSONObject executeChgrp(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==2){
-           if(true){ //se valida el gruopname
-               if(true){ //se valida el driname or filename
-                   res.put("status", true);
-                    res.put("msg","ok");
+        if (parameters.length == 2) {
+            if (true) { //se valida el gruopname
+                if (true) { //se valida el driname or filename
+                    res.put("status", true);
+                    res.put("msg", "ok");
                     return res;
-               }else{
+                } else {
                     res.put("status", false);
-                res.put("msg", "invalid  driname or filename");
-                return res;
-               }
-           }else{
+                    res.put("msg", "invalid  driname or filename");
+                    return res;
+                }
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid  username");
                 return res;
-           }
-        }else if(parameters.length==3){
-            if(parameters[0].equals("-R")){
-                if(true){ //se valida el gruopname
-                     if(true){ //se valida el driname or filename
+            }
+        } else if (parameters.length == 3) {
+            if (parameters[0].equals("-R")) {
+                if (true) { //se valida el gruopname
+                    if (true) { //se valida el driname or filename
                         res.put("status", true);
-                         res.put("msg","ok");
-                         return res;
-                    }else{
-                         res.put("status", false);
-                     res.put("msg", "invalid  driname or filename");
-                     return res;
+                        res.put("msg", "ok");
+                        return res;
+                    } else {
+                        res.put("status", false);
+                        res.put("msg", "invalid  driname or filename");
+                        return res;
                     }
-                }else{
+                } else {
                     res.put("status", false);
                     res.put("msg", "invalid  username");
                     return res;
                 }
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "chgrp expected a flag in the first argument");
                 return res;
-            }     
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "chgrp expected 2 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteChmod(String[] parameters){
+
+    public JSONObject executeChmod(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==2){
-            if(true){ //se valida el numero
-                if(true){ //se valida el filename
+        if (parameters.length == 2) {
+            if (true) { //se valida el numero
+                if (true) { //se valida el filename
                     res.put("status", true);
-                    res.put("msg","ok");
+                    res.put("msg", "ok");
                     return res;
-               }else{
+                } else {
                     res.put("status", false);
                     res.put("msg", "invalid filename");
                     return res;
-               }
-            }else{
+                }
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid permission");
                 return res;
-            }           
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "chmod expected 2 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteOpenFile(String[] parameters){
+
+    public JSONObject executeOpenFile(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(true){ // se valida archivo
+        if (parameters.length == 1) {
+            if (true) { // se valida archivo
                 res.put("status", true);
-                res.put("msg","ok");
+                res.put("msg", "ok");
                 return res;
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid filename");
                 return res;
-            }           
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "openFile expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteCloseFile(String[] parameters){
+
+    public JSONObject executeCloseFile(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(true){ // se valida archivo
+        if (parameters.length == 1) {
+            if (true) { // se valida archivo
                 res.put("status", true);
-                res.put("msg","ok");
+                res.put("msg", "ok");
                 return res;
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid filename");
                 return res;
-            }           
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "closeFile expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteViewFilesOpen(String[] parameters){
+
+    public JSONObject executeViewFilesOpen(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==0){
+        if (parameters.length == 0) {
             res.put("status", true);
-            res.put("msg","ok");
-            return res;         
-        }else {
+            res.put("msg", "ok");
+            return res;
+        } else {
             res.put("status", false);
             res.put("msg", "viewFilesOpen expected 0 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteViewFCB(String[] parameters){
+
+    public JSONObject executeViewFCB(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==1){
-            if(true){ // se valida archivo
+        if (parameters.length == 1) {
+            if (true) { // se valida archivo
                 res.put("status", true);
-                res.put("msg","ok");
+                res.put("msg", "ok");
                 return res;
-            }else{
+            } else {
                 res.put("status", false);
                 res.put("msg", "invalid filename");
                 return res;
-            }           
-        }else {
+            }
+        } else {
             res.put("status", false);
             res.put("msg", "viewFCB expected 1 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    public JSONObject exctuteInfoFs(String[] parameters){
+
+    public JSONObject executeInfoFs(String[] parameters) {
         JSONObject res = new JSONObject();
-        if(parameters.length==0){
+        if (parameters.length == 0) {
             res.put("status", true);
-            res.put("msg","ok");
-            return res;         
-        }else {
+            res.put("msg", "ok");
+            return res;
+        } else {
             res.put("status", false);
             res.put("msg", "infoFS expected 0 arguments but got " + parameters.length);
             return res;
         }
     }
-    
-    
-    
+
+    String getCurrentPath() {
+        return this.fs.getCurrentPath();
+    }
+
 }

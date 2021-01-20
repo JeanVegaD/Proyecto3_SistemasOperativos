@@ -98,17 +98,16 @@ public class GUI {
     
     private void mainMenu(){
         Scanner input = new Scanner(System.in);
-        
-        printPurple(FS.getCurrentUser());
+        printPurple(FS.getCurrentUsername());
         print("@");
-        printBlue(FS.getCurrentPah());
-        print(": ");
+        printBlue(FS.getFsName());
+        print(":");
+        printBlue("~" + FS.getCurrentPath());
+        print("$ ");
         String inputCommand = input.nextLine();
         parseCommand(inputCommand.split("\\s+"));
         
         mainMenu();
-        
-        
     }
     
     private void parseCommand(String[] commands){
@@ -117,7 +116,7 @@ public class GUI {
         if(commands.length>0){
             switch(command){
                 case "format" :
-                    JSONObject res_format = FS.exctuteFormat(parameters);
+                    JSONObject res_format = FS.executeFormat(parameters);
                     boolean status_format = (boolean) (res_format.get("status"));
                     String msg_format  = (String) (res_format.get("msg"));
                     if(status_format){
@@ -129,7 +128,7 @@ public class GUI {
                     }
                     break; 
                 case "exit" :
-                    JSONObject res_exit = FS.exctuteExit(parameters);
+                    JSONObject res_exit = FS.executeExit(parameters);
                     boolean status_exit = (boolean) (res_exit.get("status"));
                     String msg_exit  = (String) (res_exit.get("msg"));
                     if(status_exit){
@@ -140,7 +139,7 @@ public class GUI {
                     }
                     break; 
                 case "useradd" :
-                    JSONObject res = FS.exctuteUserAdd(parameters, this);
+                    JSONObject res = FS.executeUserAdd(parameters, this);
                     boolean status = (boolean) (res.get("status"));
                     String msg  = (String) (res.get("msg"));
                     if(status){
@@ -152,7 +151,7 @@ public class GUI {
                     }
                     break; 
                 case "groupadd" :
-                    JSONObject res_groupadd = FS.exctuteGroupAdd(parameters);
+                    JSONObject res_groupadd = FS.executeGroupAdd(parameters);
                     boolean status__groupadd = (boolean) (res_groupadd.get("status"));
                     String msg__groupadd  = (String) (res_groupadd.get("msg"));
                     if(status__groupadd){
@@ -164,7 +163,7 @@ public class GUI {
                     }
                     break; 
                 case "passwd" :
-                    JSONObject res_passwd = FS.exctutePasswd(parameters, this);
+                    JSONObject res_passwd = FS.executePasswd(parameters, this);
                     boolean status__passwd = (boolean) (res_passwd.get("status"));
                     String msg__passwd  = (String) (res_passwd.get("msg"));
                     if(status__passwd){
@@ -176,7 +175,7 @@ public class GUI {
                     }
                     break; 
                 case "su" :
-                    JSONObject res_su = FS.exctuteSu(parameters, this);
+                    JSONObject res_su = FS.executeSu(parameters, this);
                     boolean status_su = (boolean) (res_su.get("status"));
                     String msg_su  = (String) (res_su.get("msg"));
                     if(status_su){
@@ -188,7 +187,7 @@ public class GUI {
                     }
                     break; 
                 case "whoami" :
-                    JSONObject res_whoami = FS.exctuteWhoami(parameters);
+                    JSONObject res_whoami = FS.executeWhoami(parameters);
                     boolean status_whoami = (boolean) (res_whoami.get("status"));
                     String msg_whoami  = (String) (res_whoami.get("msg"));
                     if(status_whoami){
@@ -200,7 +199,7 @@ public class GUI {
                     }
                     break; 
                 case "pwd" :
-                    JSONObject res_pwd = FS.exctutePwd(parameters);
+                    JSONObject res_pwd = FS.executePwd(parameters);
                     boolean status_pwd = (boolean) (res_pwd.get("status"));
                     String msg_pwd  = (String) (res_pwd.get("msg"));
                     if(status_pwd){
@@ -212,7 +211,7 @@ public class GUI {
                     }
                     break; 
                 case "mkdir" :
-                    JSONObject res_mkdir = FS.exctuteMkdir(parameters);
+                    JSONObject res_mkdir = FS.executeMkdir(parameters);
                     boolean status_mkdir = (boolean) (res_mkdir.get("status"));
                     String msg_res_mkdir  = (String) (res_mkdir.get("msg"));
                     if(status_mkdir){
@@ -224,7 +223,7 @@ public class GUI {
                     }
                     break; 
                 case "rm" :
-                    JSONObject res_rm = FS.exctuteRm(parameters);
+                    JSONObject res_rm = FS.executeRm(parameters);
                     boolean status_rm = (boolean) (res_rm.get("status"));
                     String msg_res_rm  = (String) (res_rm.get("msg"));
                     if(status_rm){
@@ -236,7 +235,7 @@ public class GUI {
                     }
                     break;
                 case "mv" :
-                    JSONObject res_mv = FS.exctuteMv(parameters);
+                    JSONObject res_mv = FS.executeMv(parameters);
                     boolean status_mv = (boolean) (res_mv.get("status"));
                     String msg_res_mv = (String) (res_mv.get("msg"));
                     if(status_mv){
@@ -248,7 +247,7 @@ public class GUI {
                     }
                     break; 
                 case "ls" :
-                    JSONObject res_ls = FS.exctuteLs(parameters);
+                    JSONObject res_ls = FS.executeLs(parameters, this);
                     boolean status_ls = (boolean) (res_ls.get("status"));
                     String msg_res_ls = (String) (res_ls.get("msg"));
                     if(status_ls){
@@ -265,7 +264,7 @@ public class GUI {
                     break; 
  
                 case "cd" :
-                    JSONObject res_cd = FS.exctuteCd(parameters);
+                    JSONObject res_cd = FS.executeCd(parameters);
                     boolean status_cd = (boolean) (res_cd.get("status"));
                     String msg_res_cd = (String) (res_cd.get("msg"));
                     if(status_cd){
@@ -277,7 +276,7 @@ public class GUI {
                     }
                     break; 
                 case "whereis" :
-                    JSONObject res_whereis = FS.exctuteWhereis(parameters);
+                    JSONObject res_whereis = FS.executeWhereis(parameters);
                     boolean status_whereis = (boolean) (res_whereis.get("status"));
                     String msg_res_whereis = (String) (res_whereis.get("msg"));
                     if(status_whereis){
@@ -289,7 +288,7 @@ public class GUI {
                     }
                     break; 
                 case "ln" :
-                    JSONObject res_ln = FS.exctuteLn(parameters);
+                    JSONObject res_ln = FS.executeLn(parameters);
                     boolean status_ln = (boolean) (res_ln.get("status"));
                     String msg_res_ln = (String) (res_ln.get("msg"));
                     if(status_ln){
@@ -301,7 +300,7 @@ public class GUI {
                     }
                     break; 
                 case "touch" :
-                    JSONObject res_touch = FS.exctuteTouch(parameters);
+                    JSONObject res_touch = FS.executeTouch(parameters);
                     boolean status_touch = (boolean) (res_touch.get("status"));
                     String msg_res_touch = (String) (res_touch.get("msg"));
                     if(status_touch){
@@ -313,7 +312,7 @@ public class GUI {
                     }
                     break; 
                 case "cat" :
-                    JSONObject res_cat= FS.exctuteLn(parameters);
+                    JSONObject res_cat= FS.executeLn(parameters);
                     boolean status_cat = (boolean) (res_cat.get("status"));
                     String msg_res_cat = (String) (res_cat.get("msg"));
                     if(status_cat){
@@ -325,7 +324,7 @@ public class GUI {
                     }
                     break; 
                 case "chown" :
-                    JSONObject res_chown= FS.exctuteChown(parameters);
+                    JSONObject res_chown= FS.executeChown(parameters);
                     boolean status_chown = (boolean) (res_chown.get("status"));
                     String msg_res_chown = (String) (res_chown.get("msg"));
                     if(status_chown){
@@ -337,7 +336,7 @@ public class GUI {
                     }
                     break; 
                 case "chgrp" :
-                    JSONObject res_chgrp= FS.exctuteChgrp(parameters);
+                    JSONObject res_chgrp= FS.executeChgrp(parameters);
                     boolean status_chgrp = (boolean) (res_chgrp.get("status"));
                     String msg_res_chgrp = (String) (res_chgrp.get("msg"));
                     if(status_chgrp){
@@ -349,7 +348,7 @@ public class GUI {
                     }
                     break; 
                 case "chmod" :
-                    JSONObject res_chmod= FS.exctuteChmod(parameters);
+                    JSONObject res_chmod= FS.executeChmod(parameters);
                     boolean status_chmod = (boolean) (res_chmod.get("status"));
                     String msg_res_chmod = (String) (res_chmod.get("msg"));
                     if(status_chmod){
@@ -361,7 +360,7 @@ public class GUI {
                     }
                     break;
                 case "openFile" :
-                    JSONObject res_openFile= FS.exctuteOpenFile(parameters);
+                    JSONObject res_openFile= FS.executeOpenFile(parameters);
                     boolean status_openFile = (boolean) (res_openFile.get("status"));
                     String msg_res_openFile= (String) (res_openFile.get("msg"));
                     if(status_openFile){
@@ -373,7 +372,7 @@ public class GUI {
                     }
                     break; 
                 case "closeFile" :
-                    JSONObject res_closeFile= FS.exctuteCloseFile(parameters);
+                    JSONObject res_closeFile= FS.executeCloseFile(parameters);
                     boolean status_closeFile = (boolean) (res_closeFile.get("status"));
                     String msg_res_closeFile= (String) (res_closeFile.get("msg"));
                     if(status_closeFile){
@@ -385,7 +384,7 @@ public class GUI {
                     }
                     break;
                 case "viewFilesOpen" :
-                    JSONObject res_viewFilesOpen= FS.exctuteViewFilesOpen(parameters);
+                    JSONObject res_viewFilesOpen= FS.executeViewFilesOpen(parameters);
                     boolean status_viewFilesOpen = (boolean) (res_viewFilesOpen.get("status"));
                     String msg_res_viewFilesOpen= (String) (res_viewFilesOpen.get("msg"));
                     if(status_viewFilesOpen){
@@ -397,7 +396,7 @@ public class GUI {
                     }
                     break;
                 case "viewFCB" :
-                    JSONObject res_viewFCB= FS.exctuteViewFCB(parameters);
+                    JSONObject res_viewFCB= FS.executeViewFCB(parameters);
                     boolean status_viewFCB = (boolean) (res_viewFCB.get("status"));
                     String msg_res_viewFCB= (String) (res_viewFCB.get("msg"));
                     if(status_viewFCB){
@@ -409,7 +408,7 @@ public class GUI {
                     }
                     break;
                 case "infoFS" :
-                    JSONObject res_infoFS= FS.exctuteInfoFs(parameters);
+                    JSONObject res_infoFS= FS.executeInfoFs(parameters);
                     boolean status_infoFS = (boolean) (res_infoFS.get("status"));
                     String msg_res_infoFS= (String) (res_infoFS.get("msg"));
                     if(status_infoFS){

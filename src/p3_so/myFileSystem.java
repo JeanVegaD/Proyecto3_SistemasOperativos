@@ -6,6 +6,7 @@
 package p3_so;
 
 import console.GUI;
+import java.io.Console;
 
 /**
  *
@@ -25,7 +26,7 @@ public class myFileSystem {
             console.loadWithFile();
         }else{
             console.initError();
-        }        
+        }
     }
     
 }
