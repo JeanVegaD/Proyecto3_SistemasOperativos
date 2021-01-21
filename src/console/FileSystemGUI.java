@@ -9,6 +9,7 @@ import disk.DiskDevice;
 import filesystem.FileSystem;
 import filesystem.NotEnoughPermissionException;
 import filesystem.directories.Component;
+import filesystem.directories.Directory;
 import filesystem.directories.File;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -339,7 +340,7 @@ public class FileSystemGUI {
                 return res;
             }
         } else if (parameters.length == 2) {
-            if (parameters[0].equals("-R") || parameters[0].equals("-r")) {
+            if (parameters[0].equals("-R")) {
                 try {
                     //se valida que exista y se pueda borrar
                     if (this.fs.rm(parameters[1], true)) {
@@ -406,9 +407,9 @@ public class FileSystemGUI {
                 for (Component comp : this.fs.getDirManager().getCurrentDir().getContents()) {
                     self.print(comp.getComponentInfo() + " ");
                     if (comp.getKind() == Component.DIR) {
-                        self.printBlue(comp.getName());
+                        self.printBlue("-d " + comp.getName());
                     } else {
-                        self.print(comp.getName()
+                        self.print("-f " + comp.getName()
                                 + (((File) comp).getType().equals("FILE") ? "" : "." + ((File) comp).getType()));
                     }
                     self.print("\n");
@@ -423,10 +424,16 @@ public class FileSystemGUI {
             }
         } else if (parameters.length == 1) {
             if (parameters[0].equals("-R")) {
-                // TODO: se lista el directorio y sus carpetas
-                res.put("status", true);
-                res.put("msg", "ok");
-                return res;
+                if (this.fs.getDirManager().getCurrentDir().hasPermissionToRead(this.fs.getCurrentUser())) {
+                    this.printDirectory(this.fs.getDirManager().getCurrentDir(), self);
+                    res.put("status", true);
+                    res.put("msg", "ok");
+                    return res;
+                } else {
+                    res.put("status", false);
+                    res.put("msg", String.format("%s has not permission to read at this directory", this.fs.getCurrentUser().getUsername()));
+                    return res;
+                }
             } else {
                 res.put("status", false);
                 res.put("msg", "ls expected a flag in the first argument");
@@ -436,6 +443,30 @@ public class FileSystemGUI {
             res.put("status", false);
             res.put("msg", "ls expected 0 arguments but got " + parameters.length);
             return res;
+        }
+    }
+
+    private void printDirectory(Directory dir, IGUI self) {
+        ArrayList<Directory> pendDirs = new ArrayList<>();
+        for (Component comp : dir.getContents()) {
+            self.print(comp.getComponentInfo() + " ");
+            if (comp.getKind() == Component.DIR) {
+                self.printBlue("-d " + comp.getName());
+                pendDirs.add((Directory) comp);
+            } else {
+                self.print("-f " + comp.getName()
+                        + (((File) comp).getType().equals("FILE") ? "" : "." + ((File) comp).getType()));
+            }
+            self.print("\n");
+        }
+        if (pendDirs.size() > 0) {
+            self.print("\n");
+        }
+        for (Directory dirP: pendDirs) {
+            if (dirP.getContents().size() > 0) {
+                self.print("." + dirP.getPath() + "\n");
+                this.printDirectory(dirP, self);
+            }
         }
     }
 
@@ -585,7 +616,7 @@ public class FileSystemGUI {
                 return res;
             }
         } else if (parameters.length == 3) {
-            if (parameters[0].equals("-R") || parameters[0].equals("-r")) {
+            if (parameters[0].equals("-R")) {
                 if (this.fs.getUserManager().userExists(parameters[0])) {
                     try {
                         //se valida el username
@@ -646,7 +677,7 @@ public class FileSystemGUI {
                 return res;
             }
         } else if (parameters.length == 3) {
-            if (parameters[0].equals("-R") || parameters[0].equals("-r")) {
+            if (parameters[0].equals("-R")) {
                 if (this.fs.getUserManager().groupExists(parameters[0])) {
                     try {
                         //se valida el username
@@ -685,10 +716,10 @@ public class FileSystemGUI {
         JSONObject res = new JSONObject();
         if (parameters.length == 2) {
             if (this.validatePermissionString(parameters[0])) { //se valida el numero
-                if (this.fs.isAFileString(parameters[1])) { 
+                if (this.fs.isAFileString(parameters[1])) {
                     try {
                         //se valida el filename
-                        if(this.fs.chmod(parameters[0], parameters[1])) {
+                        if (this.fs.chmod(parameters[0], parameters[1])) {
                             res.put("status", true);
                             res.put("msg", "ok");
                             return res;
@@ -718,7 +749,7 @@ public class FileSystemGUI {
             return res;
         }
     }
-    
+
     private boolean validatePermissionString(String code) {
         return code.matches("^[0-7][0-7]$");
     }
@@ -822,7 +853,7 @@ public class FileSystemGUI {
             return res;
         }
     }
-    
+
     public JSONObject executeNote(String[] parameters) {
         JSONObject res = new JSONObject();
         if (parameters.length == 1) {
