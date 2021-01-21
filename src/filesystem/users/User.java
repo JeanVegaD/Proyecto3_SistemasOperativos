@@ -40,4 +40,8 @@ public class User {
         return new User("root", "root", password);
     }
 
+    public boolean isRoot() {
+        return this.username.equals("root");
+    }
+
 }

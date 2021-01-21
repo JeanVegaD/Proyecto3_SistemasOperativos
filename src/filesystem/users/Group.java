@@ -12,22 +12,32 @@ import java.util.ArrayList;
  * @author Luism
  */
 public class Group {
+
     private String groupName;
     private ArrayList<User> users = new ArrayList<>();
-    
+
     public Group(String groupName) {
         this.groupName = groupName;
     }
-    
+
     public void addUser(User user) {
         this.users.add(user);
     }
-    
+
     public static Group createRootGroup() {
         return new Group("root");
     }
 
     public String getName() {
         return this.groupName;
+    }
+
+    public boolean isUserIn(User user) {
+        for (User usr : this.users) {
+            if (usr.equals(user)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

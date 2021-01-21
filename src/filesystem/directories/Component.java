@@ -7,6 +7,9 @@ package filesystem.directories;
 
 import filesystem.users.Group;
 import filesystem.users.User;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  *
@@ -16,8 +19,11 @@ public abstract class Component {
     public static int DIR = 0;
     public static int FILE = 1;
     protected String name;
+    protected int size = 0;
+    protected Date creationDate;
     protected Directory parent;
-    protected String fullPath;
+    protected String myPath;
+    protected String location;
     protected int kind;
     protected User owner;
     protected Group group;
@@ -29,14 +35,23 @@ public abstract class Component {
         this.kind = kind;
         this.ownerPermissions = new PermissionDetails(7);
         this.groupPermissions = new PermissionDetails(0);
+        this.setCreationDate();
     }
+    
+    private void setCreationDate() {
+        Calendar calendario;
+        calendario = Calendar.getInstance();
+        this.creationDate = calendario.getTime();
+    }
+
+    public String getCreationDate(){		
+        SimpleDateFormat mascara = new SimpleDateFormat( "dd/MM/yy" );
+        return mascara.format(this.creationDate);
+    }
+
     
     public String getName() {
         return this.name;
-    }
-    
-    public String getFullPath() {
-        return this.fullPath;
     }
     
     public void setParentDirectory(Directory parent) {
@@ -55,11 +70,74 @@ public abstract class Component {
         return this.kind;
     }
     
-    protected void setOwner(User owner) {
+    public void setOwner(User owner) {
         this.owner = owner;
     }
 
-    protected void setGroup(Group group) {
+    public void setGroup(Group group) {
         this.group = group;
     }
+    
+    public boolean hasPermissionToRead(User user) {
+        if (user.isRoot()) {
+            return true;
+        } else if (this.owner.equals(user)) {
+            return this.ownerPermissions.hasReadPermission();
+        } else if (this.group.isUserIn(user)) {
+            return this.groupPermissions.hasReadPermission();
+        } else {
+            return false;
+        }
+    }
+    
+    public boolean hasPermissionToWrite(User user) {
+        if (user.isRoot()) {
+            return true;
+        } else if (this.owner.equals(user)) {
+            return this.ownerPermissions.hasWritePermission();
+        } else if (this.group.isUserIn(user)) {
+            return this.groupPermissions.hasWritePermission();
+        } else {
+            return false;
+        }
+    }
+    
+    public void setPermissions(String code) {
+        this.ownerPermissions = new PermissionDetails(Integer.parseInt(Character.toString(code.charAt(0))));
+        this.groupPermissions = new PermissionDetails(Integer.parseInt(Character.toString(code.charAt(1))));
+    }
+
+    public void move(Component dest) {
+        this.parent.deleteComp(this);
+        this.parent = (Directory) dest;
+        this.setPaths();
+    }
+    
+    public String getPath() {
+        return this.myPath;
+    }
+    
+    public String getLocation() {
+        return this.location;
+    }
+    
+    public abstract String getFullname();
+
+    public abstract void setPaths();
+
+    public User getOwner() {
+        return this.owner;
+    }
+
+    public void changeOwner(User usr) {
+        this.owner = usr;
+    }
+
+    public void changeGroup(Group group) {
+        this.group = group;
+    }
+
+    public abstract void changeOwnerRecursive(User usr);
+    
+    public abstract void changeGroupRecursive(Group group);
 }

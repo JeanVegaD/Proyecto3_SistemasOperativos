@@ -95,4 +95,16 @@ public class PermissionDetails {
     public int getPermissionsCode() {
         return this.write + this.read + this.execute;
     }
+    
+    public boolean hasReadPermission() {
+        return this.read == READ;
+    }
+    
+    public boolean hasWritePermission() {
+        return this.write == WRITE;
+    }
+    
+    public boolean hasExecutePermission() {
+        return this.execute == EXECUTE;
+    }
 }
