@@ -50,7 +50,7 @@ public class FS_File {
     public FS_File(int sizeOfDisk, String path){
         //format file
         this.path=path;
-        int sizeInKb = sizeOfDisk * 1000000;
+        int sizeInKb = sizeOfDisk;
 
         for(int i=0; i<= sizeInKb ; i+=64){
             JSONObject tempJSON = new JSONObject();
