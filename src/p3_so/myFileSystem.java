@@ -25,7 +25,8 @@ public class myFileSystem {
             console.loadWithFile();
         }else{
             console.initError();
-        }        
+        }
+        
     }
     
 }
