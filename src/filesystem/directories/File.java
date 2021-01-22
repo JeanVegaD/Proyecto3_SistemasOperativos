@@ -43,7 +43,7 @@ public class File extends Component {
         String info = "";
         info += "name: " + this.name + (this.type.equals("FILE") ? "" : "." + this.type) + "\n";
         info += "owner: " + this.owner.getUsername() + "\n";
-        info += "creation date: " + this.getCreationDate() + "\n";
+        info += "creation date: " + this.getCreationDateText()+ "\n";
         info += "status: " + (isOPen() ? "open" : "closed") + "\n";
         info += "size: " + this.readSize(this.size) + "\n";
         info += "location: " + this.location;
@@ -128,11 +128,13 @@ public class File extends Component {
     @Override
     public void changeOwnerRecursive(User usr, FS_File disk) {
         this.changeOwner(usr);
+        disk.changeComponentOwner(Integer.toString(this.getID()), usr.getUsername());
     }
     
     @Override
     public void changeGroupRecursive(Group group, FS_File disk) {
         this.changeGroup(group);
+        disk.changeComponentGroup(Integer.toString(this.getID()), group.getName());
     }
 
     public String getSize() {
