@@ -15,7 +15,9 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import note.NoteController;
 import org.json.simple.JSONObject;
+import p3_so.FS_File;
 
 /**
  *
@@ -27,13 +29,17 @@ public class FileSystemGUI {
     private String currentUser = "root";
     private FileSystem fs;
 
-    public FileSystemGUI() {
-        this.fs = new FileSystem();
-        this.fs.format(10240, "root123");
-        this.initTestValues(); // TEST
+    public FileSystemGUI(int size, String rootPassword, FS_File diskFS) {
+        this.fs = new FileSystem(diskFS);
+        this.fs.format(size, rootPassword);
+        //this.initTestValues(); // TEST
+    }
+    
+    public FileSystemGUI(FS_File diskFS) {
+        this.fs = new FileSystem(diskFS);
     }
 
-    public void initTestValues() {
+    /*public void initTestValues() {
         this.fs.usseradd("Luis M", "luis", "luis1");
         this.fs.usseradd("Michelle A", "mich", "mich1");
         this.fs.usseradd("Jean V", "jean", "jean1");
@@ -47,7 +53,7 @@ public class FileSystemGUI {
         this.fs.getCurrentDir().searchDir("home").searchDir("luis").addFile("file3", "asm", this.fs.getUserManager().searchUser("luis"), this.fs.getUserManager().searchGroup("admin"));
         this.fs.getCurrentDir().searchDir("home").searchDir("luis").searchFile("myFile.txt").setContents("Hola, mi nombre es Luis");
     }
-
+    */
     public String getFsName() {
         return fsName;
     }
@@ -859,9 +865,10 @@ public class FileSystemGUI {
         if (parameters.length == 1) {
             // Execute note
             if (this.fs.isAFileString(parameters[0])) {
-                File file = this.fs.getCurrentDir().searchFile(fsName);
+                File file = this.fs.getCurrentDir().searchFile(parameters[0]);
                 if (file != null) {
-                    // Start node
+                    NoteController noteC = new NoteController(file.getContents(), file, this.fs);
+                    noteC.showNote();
                     res.put("status", true);
                     res.put("msg", "ok");
                     return res;

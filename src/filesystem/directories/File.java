@@ -8,6 +8,7 @@ package filesystem.directories;
 import filesystem.NotEnoughPermissionException;
 import filesystem.users.Group;
 import filesystem.users.User;
+import p3_so.FS_File;
 
 /**
  *
@@ -24,7 +25,7 @@ public class File extends Component {
         this.isOPen = false;
     }
 
-    File(String name, String type) {
+    public File(String name, String type) {
         super(name, Component.FILE);
         this.isOPen = false;
         this.type = type;
@@ -42,11 +43,21 @@ public class File extends Component {
         String info = "";
         info += "name: " + this.name + (this.type.equals("FILE") ? "" : "." + this.type) + "\n";
         info += "owner: " + this.owner.getUsername() + "\n";
-        info += "creation date: " + this.getCreationDate() + "\n";
+        info += "creation date: " + this.getCreationDateText()+ "\n";
         info += "status: " + (isOPen() ? "open" : "closed") + "\n";
-        info += "size: " + this.size + "\n";
+        info += "size: " + this.readSize(this.size) + "\n";
         info += "location: " + this.location;
         return info;
+    }
+    
+    private String readSize(int size) {
+        if (size < 1024) {
+            return Integer.toString(size) + "KB";
+        } else if (size >= 1024 && size < 1048576) {
+            return Double.toString(Math.round((size / 1024.0) * 100.0) / 100.0)  + "MB";
+        } else {
+            return Double.toString(Math.round(((size / 1024.0) / 1024.0) * 100.0) / 100.0)  + "GB";
+        }
     }
     
     public String getContents() {
@@ -100,6 +111,7 @@ public class File extends Component {
         }
     }
 
+    @Override
     public void setName(String name) {
         String[] parts = name.split("\\.");
         if (parts.length == 2) {
@@ -114,12 +126,30 @@ public class File extends Component {
     }
 
     @Override
-    public void changeOwnerRecursive(User usr) {
+    public void changeOwnerRecursive(User usr, FS_File disk) {
         this.changeOwner(usr);
+        disk.changeComponentOwner(Integer.toString(this.getID()), usr.getUsername());
     }
     
     @Override
-    public void changeGroupRecursive(Group group) {
+    public void changeGroupRecursive(Group group, FS_File disk) {
         this.changeGroup(group);
+        disk.changeComponentGroup(Integer.toString(this.getID()), group.getName());
+    }
+
+    public String getSize() {
+        return Integer.toString(this.size);
+    }
+
+    public void addContent(String contents) {
+        this.contents += contents;
+    }
+
+    public void setSize(String size) {
+        this.size = Integer.parseInt(size);
+    }
+
+    public void incrementSize(String size) {
+        this.size += Integer.parseInt(size);
     }
 }

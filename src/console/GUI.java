@@ -16,22 +16,7 @@ import java.util.logging.Logger;
 public class GUI extends IGUI {
     
     public GUI(){
-        this.FS = new FileSystemGUI();
         introText();   
-    }
-    
-    @Override
-    public void loadWithFile() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void loadNewFile() {
-        try {
-            mainMenu();
-        } catch (AWTException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     @Override

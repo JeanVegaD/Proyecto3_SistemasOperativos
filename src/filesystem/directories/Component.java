@@ -10,6 +10,7 @@ import filesystem.users.User;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import p3_so.FS_File;
 
 /**
  *
@@ -29,16 +30,31 @@ public abstract class Component {
     protected Group group;
     protected PermissionDetails ownerPermissions;
     protected PermissionDetails groupPermissions;
+    private int id;
     
     public Component(String name, int kind) {
         this.name = name;
         this.kind = kind;
         this.ownerPermissions = new PermissionDetails(7);
-        this.groupPermissions = new PermissionDetails(0);
+        this.groupPermissions = new PermissionDetails(7);
         this.setCreationDate();
     }
     
+    public int getID() {
+        return this.id;
+    }
+    
+    public void generateID() {
+        this.id = IDGenerator.getNextId();
+    }
+    
     private void setCreationDate() {
+        Calendar calendario;
+        calendario = Calendar.getInstance();
+        this.creationDate = calendario.getTime();
+    }
+    
+    public void setCreationDate(String date) {
         Calendar calendario;
         calendario = Calendar.getInstance();
         this.creationDate = calendario.getTime();
@@ -111,6 +127,7 @@ public abstract class Component {
         this.parent.deleteComp(this);
         this.parent = (Directory) dest;
         this.setPaths();
+        ((Directory) dest).getContents().add(this);
     }
     
     public String getPath() {
@@ -136,8 +153,21 @@ public abstract class Component {
     public void changeGroup(Group group) {
         this.group = group;
     }
-
-    public abstract void changeOwnerRecursive(User usr);
     
-    public abstract void changeGroupRecursive(Group group);
+    public Group getGroup() {
+        return this.group;
+    }
+    
+    public String getPermissionsCode() {
+        return Integer.toString(this.ownerPermissions.getPermissionsCode()) + 
+                Integer.toString(this.groupPermissions.getPermissionsCode());
+    }
+
+    public abstract void changeOwnerRecursive(User usr, FS_File disk);
+    
+    public abstract void changeGroupRecursive(Group group, FS_File disk);
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

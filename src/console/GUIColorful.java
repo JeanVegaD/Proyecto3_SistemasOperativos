@@ -18,6 +18,7 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONObject;
+import p3_so.FS_File;
 
 
 public class GUIColorful extends IGUI {
@@ -33,23 +34,7 @@ public class GUIColorful extends IGUI {
     public static final String ANSI_WHITE = "\u001B[37m";
     
     public GUIColorful(){
-        FS = new FileSystemGUI();
         introText();   
-    }
-    
-    /*Initializers*/
-    @Override
-    public void loadWithFile(){
-        
-    }
-    
-    @Override
-    public void loadNewFile(){
-        try {
-            mainMenu();
-        } catch (AWTException ex) {
-            Logger.getLogger(GUIColorful.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
     
     /**

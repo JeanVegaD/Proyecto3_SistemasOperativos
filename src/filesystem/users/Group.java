@@ -19,13 +19,17 @@ public class Group {
     public Group(String groupName) {
         this.groupName = groupName;
     }
+    
+    public static String getRootGroupname() {
+        return "sudo";
+    }
 
     public void addUser(User user) {
         this.users.add(user);
     }
 
     public static Group createRootGroup() {
-        return new Group("root");
+        return new Group("sudo");
     }
 
     public String getName() {

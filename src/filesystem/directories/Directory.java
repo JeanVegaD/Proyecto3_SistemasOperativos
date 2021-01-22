@@ -8,6 +8,7 @@ package filesystem.directories;
 import filesystem.users.Group;
 import filesystem.users.User;
 import java.util.ArrayList;
+import p3_so.FS_File;
 
 /**
  *
@@ -31,6 +32,7 @@ public class Directory extends Component {
             File newF = new File(name, type);
             newF.setParentDirectory(this);
             newF.setPaths();
+            newF.generateID();
             this.contents.add(newF);
             return true;
         } else {
@@ -38,17 +40,18 @@ public class Directory extends Component {
         }
     }
     
-    public boolean addFile(String filename, String type, User owner, Group group) {
+    public File addFile(String filename, String type, User owner, Group group) {
         if (searchFile(filename) == null) {
             File newF = new File(filename, type);
             newF.setOwner(owner);
             newF.setGroup(group);
             newF.setParentDirectory(this);
             newF.setPaths();
+            newF.generateID();
             this.contents.add(newF);
-            return true;
+            return newF;
         } else {
-            return false;
+            return null;
         }
     }
 
@@ -57,6 +60,7 @@ public class Directory extends Component {
             Directory dir = new Directory(name);
             dir.setParentDirectory(this);
             dir.setPaths();
+            dir.generateID();
             this.contents.add(dir);
             return true;
         } else {
@@ -65,17 +69,18 @@ public class Directory extends Component {
     }
     
     
-    public boolean addDirectory(String name, User owner, Group group) {
+    public Directory addDirectory(String name, User owner, Group group) {
         if (searchDir(name) == null) {
             Directory dir = new Directory(name);
             dir.setOwner(owner);
             dir.setGroup(group);
             dir.setParentDirectory(this);
             dir.setPaths();
+            dir.generateID();
             this.contents.add(dir);
-            return true;
+            return dir;
         } else {
-            return false;
+            return null;
         }
     }
 
@@ -153,10 +158,28 @@ public class Directory extends Component {
         this.contents.remove(comp);
     }
     
-    public void deleteComponents(String regex) {
-        this.contents.removeIf((comp) -> (comp.getFullname().matches(regex)));
+    public ArrayList<Component> deleteComponents(String regex) {
+        ArrayList<Component> toRemove = new ArrayList<>();
+        for(Component comp: this.contents) {
+            if (comp.getFullname().matches(regex)) {
+                toRemove.add(comp);
+            }
+        }
+        this.contents.removeAll(toRemove);
+        return toRemove;
     }
 
+    public ArrayList<Component> deleteDirRecursive(Directory dir) {
+        ArrayList<Component> toRemove = new ArrayList<>();
+        toRemove.addAll(dir.contents);
+        for(Component comp: this.contents) {
+            if (comp.getKind() == DIR) {
+                toRemove.addAll(this.deleteDirRecursive((Directory) comp));
+            }
+        }
+        return toRemove;
+    }
+    
     @Override
     public void setPaths() {
         if (this.parent != null) {
@@ -178,18 +201,20 @@ public class Directory extends Component {
     }
 
     @Override
-    public void changeOwnerRecursive(User usr) {
+    public void changeOwnerRecursive(User usr, FS_File disk) {
         this.owner = usr;
         for(Component comp: this.contents) {
-            comp.changeOwnerRecursive(usr);
+            comp.changeOwnerRecursive(usr, disk);
+            disk.changeComponentOwner(Integer.toString(this.getID()), usr.getUsername());
         }
     }
     
     @Override
-    public void changeGroupRecursive(Group group) {
+    public void changeGroupRecursive(Group group, FS_File disk) {
         this.group = group;
         for(Component comp: this.contents) {
-            comp.changeGroupRecursive(group);
+            comp.changeGroupRecursive(group, disk);
+            disk.changeComponentGroup(Integer.toString(this.getID()), group.getName());
         }
     }
 
