@@ -15,6 +15,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import note.NoteController;
 import org.json.simple.JSONObject;
 import p3_so.FS_File;
 
@@ -864,9 +865,10 @@ public class FileSystemGUI {
         if (parameters.length == 1) {
             // Execute note
             if (this.fs.isAFileString(parameters[0])) {
-                File file = this.fs.getCurrentDir().searchFile(fsName);
+                File file = this.fs.getCurrentDir().searchFile(parameters[0]);
                 if (file != null) {
-                    // Start node
+                    NoteController noteC = new NoteController(file.getContents(), file, this.fs);
+                    noteC.showNote();
                     res.put("status", true);
                     res.put("msg", "ok");
                     return res;

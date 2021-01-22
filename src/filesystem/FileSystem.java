@@ -41,6 +41,10 @@ public class FileSystem {
         userManager = new UserManager(users, groups);
         this.diskFS = diskFS;
     }
+    
+    public void readFromFile() {
+        
+    }
 
     public void format(int size, String rootPassword) {
         this.diskFS = new FS_File(size);
@@ -51,7 +55,7 @@ public class FileSystem {
         this.userManager.createRootGroup();
         // 
         User root = this.userManager.getRootUser();
-        Group userGroup = this.userManager.searchGroup("sudo");
+        Group userGroup = this.userManager.searchGroup(Group.getRootGroupname());
         this.diskFS.addUser(root.getName(), root.getUsername(), rootPassword);
         this.diskFS.addGroup(userGroup.getName());
         
@@ -59,37 +63,51 @@ public class FileSystem {
         this.rootDir = new Directory();
         this.rootDir.setPaths();
         configRootDir();
-        this.rootDir.addDirectory("home", this.currentUser, this.getUserManager().searchGroup("root"));
-        this.rootDir.searchDir("home").addDirectory("root", this.currentUser, this.getUserManager().searchGroup("root"));
+        this.rootDir.addDirectory("home", this.currentUser, this.getUserManager().searchGroup("sudo"));
+        
+        Directory homeDir = this.rootDir.searchDir("home");
+        
+        this.diskFS.addPath(
+                Integer.toString(homeDir.getID()), 
+                homeDir.getLocation(), 
+                homeDir.getName(), 
+                homeDir.getOwner().getUsername(), 
+                homeDir.getGroup().getName(),
+                homeDir.getPermissionsCode(),
+                homeDir.getCreationDate());
+        
         this.currentDir = this.rootDir;
         this.dirManager = new DirectoryManager(this.rootDir, this.currentDir);
     }
 
     private void configRootDir() {
         this.rootDir.setOwner(this.currentUser);
-        this.rootDir.setGroup(this.userManager.searchGroup("root"));
+        this.rootDir.setGroup(this.userManager.searchGroup(Group.getRootGroupname()));
         this.rootDir.setPermissions("77");
     }
 
     public void usseradd(String name, String username, String password) {
         User newUser = new User(name, username, password);
         this.users.add(newUser);
-        this.rootDir.searchDir("home").addDirectory(username, this.userManager.searchUser(username), this.getUserManager().searchGroup("root"));
-        // TODO: llamar método para la representación en el archivo.
+        this.rootDir.searchDir("home").addDirectory(username, this.userManager.searchUser(username), this.getUserManager().searchGroup("sudo"));
+        this.diskFS.addUser(newUser.getName(), newUser.getUsername(), newUser.getPassword());
     }
 
     public void groupadd(String groupName) {
         Group newGroup = new Group(groupName);
         this.groups.add(newGroup);
+        this.diskFS.addGroup(groupName);
     }
 
     public void passwd(String username, String newPassword) {
         User user = this.userManager.searchUser(username);
         user.changePassword(newPassword);
+        this.diskFS.changePasswordUser(username, newPassword);
     }
 
     public void passwd(User user, String newPassword) {
         user.changePassword(newPassword);
+        this.diskFS.changePasswordUser(user.getUsername(), newPassword);
     }
 
     public boolean su(String password) {
@@ -118,8 +136,18 @@ public class FileSystem {
         if (this.currentDir.hasPermissionToWrite(currentUser)) {
             String result = "";
             for (String str : dirnames) {
-                if (!this.currentDir.addDirectory(str, this.currentUser, this.userManager.searchGroup("root"))) {
+                Directory newDir = this.currentDir.addDirectory(str, this.currentUser, this.userManager.searchGroup(Group.getRootGroupname()));
+                if ( newDir == null) {
                     result += String.format("%s already exists\n", str);
+                } else {
+                    this.diskFS.addPath(
+                            Integer.toString(newDir.getID()), 
+                            newDir.getLocation(), 
+                            newDir.getName(), 
+                            newDir.getOwner().getUsername(), 
+                            newDir.getGroup().getName(),
+                            newDir.getPermissionsCode(),
+                            newDir.getCreationDate());
                 }
             }
             result = result.endsWith("\n") ? result.substring(0, result.length() - 2) : "";
@@ -138,13 +166,57 @@ public class FileSystem {
      */
     public boolean rm(String fileName_DirName, boolean recursive) throws NotEnoughPermissionException, Exception {
         if (this.currentDir.hasPermissionToRead(currentUser)) {
-            this.currentDir.deleteComponents(fileName_DirName);
+            if (this.isAFileString(fileName_DirName)) { // is a file
+                ArrayList<Component> toRemove = this.currentDir.deleteComponents(fileName_DirName);
+                for(Component comp: toRemove) {
+                    if(comp.getKind() == Component.DIR) {
+                        this.diskFS.deletePath(Integer.toString(comp.getID()));
+                    } else {
+                        this.diskFS.deleteFile(Integer.toString(comp.getID()));
+                    }
+                }
+                return true;
+            } else { // is a dir
+                Directory dir = this.currentDir.searchDir(fileName_DirName);
+                if (dir != null) {
+                    if (recursive) {
+                        ArrayList<Component> toRemove = this.currentDir.deleteDirRecursive(dir);
+                        for(Component comp: toRemove) {
+                            if(comp.getKind() == Component.DIR) {
+                                this.diskFS.deletePath(Integer.toString(comp.getID()));
+                            } else {
+                                this.diskFS.deleteFile(Integer.toString(comp.getID()));
+                            }
+                        }
+                    } else {
+                        if (dir.getContents().isEmpty() ) {
+                            this.currentDir.deleteComp(dir);
+                            this.diskFS.deletePath(Integer.toString(dir.getID()));
+                        } else {
+                            throw new Exception(String.format("%s is not empty", fileName_DirName));
+                        }
+                    }
+                } else {
+                    return false;
+                }
+            }
             return true;
         } else {
             throw new NotEnoughPermissionException(this.currentUser.getUsername(), "write", NotEnoughPermissionException.DIR);
         }
     }
 
+    private void changeRecursiveLocations(Directory comp) {
+        for (Component compP: comp.getContents()) {
+            if (compP.getKind() == Component.DIR) {
+                this.diskFS.changePathDir(Integer.toString(compP.getID()), compP.getLocation());
+                this.changeRecursiveLocations((Directory) compP);
+            } else {
+                this.diskFS.changePathFile(Integer.toString(compP.getID()), compP.getLocation());
+            }
+        }
+    }
+    
     public boolean mv(String firstParam, String secondParam) throws Exception {
         if (this.currentDir.hasPermissionToRead(currentUser)) {
             Component src;
@@ -152,8 +224,10 @@ public class FileSystem {
                 if (!this.isAFileString(secondParam)) { // second is a dir then move dir
                     src = this.currentDir.searchDir(firstParam);
                     if (src != null) { // Si existe
-                        Component dest = this.currentDir.searchDir(secondParam);
-                        src.move(dest);
+                        src.setName(secondParam);
+                        src.setPaths();
+                        this.diskFS.changeNameDir(Integer.toString(src.getID()), src.getName());
+                        changeRecursiveLocations((Directory) src);
                         return true;
                     } else {
                         return false;
@@ -167,11 +241,13 @@ public class FileSystem {
                     if (this.isAFileString(secondParam)) { // Second is a file
                         // Renombrar
                         ((File) src).setName(secondParam);
+                        this.diskFS.changeNameFile(Integer.toString(src.getID()), src.getFullname());
                     } else { // Second is a dir
                         // Mover
                         Directory dest = this.currentDir.searchDir(secondParam);
                         if (dest != null) { // existe
                             src.move(dest);
+                            this.diskFS.changePathFile(Integer.toString(src.getID()), src.getLocation());
                             return true;
                         } else { // no existe
                             return false;
@@ -233,7 +309,22 @@ public class FileSystem {
         } else {
             if (this.currentDir.hasPermissionToWrite(currentUser)) {
                 String[] fileParts = this.getFileParts(filename);
-                this.currentDir.addFile(fileParts[0], fileParts[1], this.currentUser, this.userManager.searchGroup("root"));
+                File newF = this.currentDir.addFile(fileParts[0], fileParts[1], this.currentUser, this.userManager.searchGroup(Group.getRootGroupname()));
+                if (newF != null) {
+                    this.diskFS.addFile(
+                                    Integer.toString(newF.getID()), 
+                                    ((File) newF).getType(),
+                                    newF.getLocation(), 
+                                    newF.getName(), 
+                                    ((File) newF).getSize(), 
+                                    newF.getOwner().getUsername(), 
+                                    newF.getGroup().getName(),
+                                    newF.getPermissionsCode(),
+                                    newF.getCreationDate(), 
+                                    ((File) newF).getContents(), false);
+                } else {
+                    return false;
+                }
                 return true;
             } else {
                 throw new NotEnoughPermissionException(this.currentUser.getUsername(), "write", NotEnoughPermissionException.DIR);
@@ -253,9 +344,10 @@ public class FileSystem {
             if (usr != null) { // user exists
                 if (comp.getOwner().getUsername().equals(currentUser.getUsername()) || this.currentUser.isRoot()) {
                     if (recursive) {
-                        comp.changeOwnerRecursive(usr);
+                        comp.changeOwnerRecursive(usr, diskFS);
                     } else {
                         comp.changeOwner(usr);
+                        this.diskFS.changeComponentOwner(ownername, ownername);
                     }
                     return true;
                 } else {
@@ -281,7 +373,7 @@ public class FileSystem {
             if (group != null) { // user exists
                 if (comp.getOwner().getUsername().equals(currentUser.getUsername()) || this.currentUser.isRoot()) {
                     if (recursive) {
-                        comp.changeGroupRecursive(group);
+                        comp.changeGroupRecursive(group, diskFS);
                     } else {
                         comp.changeGroup(group);
                     }
@@ -307,6 +399,7 @@ public class FileSystem {
         if (comp != null) {
             if (comp.getOwner().getUsername().equals(currentUser.getUsername()) || this.currentUser.isRoot()) {
                 comp.setPermissions(permissionsCode);
+                this.diskFS.changeComponentPermissions(Integer.toString(comp.getID()), comp.getPermissionsCode());
                 return true;
             } else {
                 throw new Exception(String.format("%s cannot change the permissions of this file", this.currentUser.getUsername()));
@@ -423,6 +516,20 @@ public class FileSystem {
         } else {
             return Integer.toString((int) Math.round((size / 1024.0) / 1024)) + "GB";
         }
+    }
+
+    public void saveFile(File file) {
+        this.diskFS.addFile(
+                Integer.toString(file.getID()), 
+                ((File) file).getType(),
+                file.getLocation(), 
+                file.getName(), 
+                ((File) file).getSize(), 
+                file.getOwner().getUsername(), 
+                file.getGroup().getName(),
+                file.getPermissionsCode(),
+                file.getCreationDate(), 
+                ((File) file).getContents(), true);
     }
 
 }

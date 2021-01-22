@@ -8,6 +8,7 @@ package filesystem.directories;
 import filesystem.NotEnoughPermissionException;
 import filesystem.users.Group;
 import filesystem.users.User;
+import p3_so.FS_File;
 
 /**
  *
@@ -114,12 +115,16 @@ public class File extends Component {
     }
 
     @Override
-    public void changeOwnerRecursive(User usr) {
+    public void changeOwnerRecursive(User usr, FS_File disk) {
         this.changeOwner(usr);
     }
     
     @Override
-    public void changeGroupRecursive(Group group) {
+    public void changeGroupRecursive(Group group, FS_File disk) {
         this.changeGroup(group);
+    }
+
+    public String getSize() {
+        return Integer.toString(this.size);
     }
 }

@@ -44,4 +44,8 @@ public class User {
         return this.username.equals("root");
     }
 
+    public String getPassword() {
+        return this.password;
+    }
+
 }
