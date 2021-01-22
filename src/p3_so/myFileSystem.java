@@ -21,7 +21,7 @@ public class myFileSystem {
         GUIColorful console = new GUIColorful();
         switch (argsCont) {
             case 0 -> console.loadNewFile();
-            case 1 -> console.loadWithFile();
+            case 1 -> console.loadWithFile(args[0]);
             default -> console.initError();
         }
     }

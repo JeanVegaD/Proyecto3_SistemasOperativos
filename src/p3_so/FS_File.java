@@ -24,6 +24,7 @@ import org.json.simple.parser.ParseException;
 public class FS_File {
     String path; 
     JSONArray fsStructure  = new JSONArray();
+    int size;
     
     public FS_File(String path){
         this.path=path;
@@ -47,17 +48,21 @@ public class FS_File {
         }
     }
 
-    public FS_File(int sizeOfDisk, String path){
+    public FS_File(int sizeOfDisk){
         //format file
-        this.path=path;
+        this.size = sizeOfDisk;
+        this.path="miDiscoDuro.fs";
         int sizeInKb = sizeOfDisk;
 
         for(int i=0; i<= sizeInKb ; i+=64){
             JSONObject tempJSON = new JSONObject();
             fsStructure.add(tempJSON);
         }
-        
         writeInFile();
+    }
+    
+    public int getSize() {
+        return this.size;
     }
     
     public void writeInFile(){
@@ -388,25 +393,6 @@ public class FS_File {
          writeInFile();
     }
     
-    public void changeOwnerDir(String id, String owner){
-        for (Object obj : fsStructure) {
-            JSONObject tempJSON = (JSONObject) obj;
-            
-            if(!tempJSON.isEmpty()){
-                String kind = (String) tempJSON.get("kind");
-                if(kind.equals("dir") ){ 
-                   String id_obj = (String) tempJSON.get("id");
-                    if(id_obj.equals(id)){
-                        tempJSON.replace("owner", owner);
-                    }
-                }
-            }
-            
-        } 
-        //System.out.println(fsStructure);.
-         writeInFile();
-    }
-    
      public void changeGroupFile(String id, String group){
         for (Object obj : fsStructure) {
             JSONObject tempJSON = (JSONObject) obj;
@@ -426,26 +412,6 @@ public class FS_File {
          writeInFile();
     }
      
-     public void changeGroupDir(String id, String group){
-        for (Object obj : fsStructure) {
-            JSONObject tempJSON = (JSONObject) obj;
-            
-            if(!tempJSON.isEmpty()){
-                String kind = (String) tempJSON.get("kind");
-                if(kind.equals("dir") ){ 
-                    String id_obj = (String) tempJSON.get("id");
-                    if(id_obj.equals(id)){
-                        tempJSON.replace("group", group);
-                    }
-                }
-            }
-            
-        } 
-        //System.out.println(fsStructure);
-         writeInFile();
-    }
-     
-     
      public void changePermissionFile(String id, int permissions){
          for (Object obj : fsStructure) {
             JSONObject tempJSON = (JSONObject) obj;
@@ -464,102 +430,5 @@ public class FS_File {
         //System.out.println(fsStructure);
          writeInFile();
      }
-     
-     public void changeNameFile(String id, String name){
-         for (Object obj : fsStructure) {
-            JSONObject tempJSON = (JSONObject) obj;
-            
-            if(!tempJSON.isEmpty()){
-                String kind = (String) tempJSON.get("kind");
-                if(kind.equals("file") ){ 
-                    String id_obj = (String) tempJSON.get("id");
-                    if(id_obj.equals(id)){
-                        tempJSON.replace("name", name);
-                    }
-                }
-            }
-            
-        } 
-        //System.out.println(fsStructure);
-         writeInFile();
-     }
-     
-      public void changeNameDir(String id, String name){
-         for (Object obj : fsStructure) {
-            JSONObject tempJSON = (JSONObject) obj;
-            
-            if(!tempJSON.isEmpty()){
-                String kind = (String) tempJSON.get("kind");
-                if(kind.equals("dir") ){ 
-                    String id_obj = (String) tempJSON.get("id");
-                    if(id_obj.equals(id)){
-                        tempJSON.replace("name", name);
-                    }
-                }
-            }
-            
-        } 
-        //System.out.println(fsStructure);
-         writeInFile();
-     }
-      
-      public void changePathFile(String id, String path){
-         for (Object obj : fsStructure) {
-            JSONObject tempJSON = (JSONObject) obj;
-            
-            if(!tempJSON.isEmpty()){
-                String kind = (String) tempJSON.get("kind");
-                if(kind.equals("file") ){ 
-                    String id_obj = (String) tempJSON.get("id");
-                    if(id_obj.equals(id)){
-                        tempJSON.replace("path", path);
-                    }
-                }
-            }
-            
-        } 
-        //System.out.println(fsStructure);
-         writeInFile();
-     }
-     
-      public void changePathDir(String id, String path){
-         for (Object obj : fsStructure) {
-            JSONObject tempJSON = (JSONObject) obj;
-            
-            if(!tempJSON.isEmpty()){
-                String kind = (String) tempJSON.get("kind");
-                if(kind.equals("dir") ){ 
-                    String id_obj = (String) tempJSON.get("id");
-                    if(id_obj.equals(id)){
-                        tempJSON.replace("path", path);
-                    }
-                }
-            }
-            
-        } 
-        //System.out.println(fsStructure);
-         writeInFile();
-     }
-     
-     
-      public void changePasswordUser(String username, String password){
-            for (Object obj : fsStructure) {
-                JSONObject tempJSON = (JSONObject) obj;
-                if(!tempJSON.isEmpty()){
-                    String kind = (String) tempJSON.get("kind");
-                    if(kind.equals("users")){
-                        JSONArray arrayUsers  = (JSONArray)tempJSON.get("users");
-                        for (Object obj2 : arrayUsers) {
-                            JSONObject tempUsers = (JSONObject) obj2;
-                            String tempName = (String) tempUsers.get("username");
-                            if(tempName.equals(username)){
-                                tempJSON.replace("password", password);
-                            }
-                        }
-                    }
-                }
-            }
-            writeInFile();
-      }
-     
+
 }

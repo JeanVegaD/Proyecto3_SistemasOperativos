@@ -13,13 +13,13 @@ import filesystem.directories.File;
 import filesystem.users.Group;
 import filesystem.users.User;
 import java.util.ArrayList;
+import p3_so.FS_File;
 
 /**
- *
+ * Class
  * @author Luism
  */
 public class FileSystem {
-
     private DiskDevice diskDevice;
     private IAllocationMethod allocationMethod;
     private ArrayList<User> users = new ArrayList<>();
@@ -30,16 +30,31 @@ public class FileSystem {
     private UserManager userManager;
     private DirectoryManager dirManager;
 
+    private FS_File diskFS;
+    
     public FileSystem() {
         userManager = new UserManager(users, groups);
+        this.format(10240, "root123");
+    }
+
+    public FileSystem(FS_File diskFS) {
+        userManager = new UserManager(users, groups);
+        this.diskFS = diskFS;
     }
 
     public void format(int size, String rootPassword) {
+        this.diskFS = new FS_File(size);
         this.diskDevice = new DiskDevice(size);
         this.users.clear();
         this.groups.clear();
         this.userManager.createRootUser(rootPassword);
         this.userManager.createRootGroup();
+        // 
+        User root = this.userManager.getRootUser();
+        Group userGroup = this.userManager.searchGroup("sudo");
+        this.diskFS.addUser(root.getName(), root.getUsername(), rootPassword);
+        this.diskFS.addGroup(userGroup.getName());
+        
         this.currentUser = this.userManager.getRootUser();
         this.rootDir = new Directory();
         this.rootDir.setPaths();
