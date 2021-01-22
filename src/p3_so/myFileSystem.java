@@ -5,7 +5,7 @@
  */
 package p3_so;
 
-import console.GUI;
+import console.GUIColorful;
 
 /**
  *
@@ -18,15 +18,12 @@ public class myFileSystem {
      */
     public static void main(String[] args) {
         int argsCont = args.length;
-        GUI console = new GUI();
-        if(argsCont==0){
-            console.loadNewFile();
-        }else if(argsCont==1){
-            console.loadWithFile();
-        }else{
-            console.initError();
+        GUIColorful console = new GUIColorful();
+        switch (argsCont) {
+            case 0 -> console.loadNewFile();
+            case 1 -> console.loadWithFile();
+            default -> console.initError();
         }
-        
     }
     
 }
